@@ -166,6 +166,6 @@ def analyze_logs(job_id: str) -> None:
                 job.status = "failed"
                 db.commit()
         except Exception:
-            pass
+            logger.exception("Failed to set job status to failed during error recovery")
     finally:
         db.close()

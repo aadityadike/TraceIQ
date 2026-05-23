@@ -35,10 +35,19 @@ async def ingest_log(
     await db.commit()
     await db.refresh(job)
 
-    celery_client.send_task(
-        "tasks.analyze_logs.analyze_logs", args=[str(job.id)]
-    )
-    logger.info(f"Dispatched analysis task for job {job.id}")
+    try:
+        celery_client.send_task(
+            "tasks.analyze_logs.analyze_logs", args=[str(job.id)]
+        )
+        logger.info(f"Dispatched analysis task for job {job.id}")
+    except Exception:
+        logger.exception(f"Failed to dispatch task for job {job.id}")
+        job.status = "failed"
+        await db.commit()
+        raise HTTPException(
+            status_code=http_status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Analysis queue unavailable. Job created but could not be queued.",
+        )
 
     return LogIngestResponse(
         job_id=job.id,
