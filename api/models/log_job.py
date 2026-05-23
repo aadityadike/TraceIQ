@@ -7,6 +7,8 @@ from sqlalchemy.sql import func
 
 from database import Base
 
+__all__ = ["Base", "LogJob", "ErrorPattern"]
+
 
 class LogJob(Base):
     __tablename__ = "log_jobs"
